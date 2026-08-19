@@ -26,7 +26,7 @@ jobs:
         run: mvn -f fo-plugin-core-stubs/pom.xml clean install --batch-mode
 
       - name: Build with Maven
-        run: mvn clean package --batch-mode
+        run: mvn clean package --batch-mode -Dfo-core.scope=provided
 
       - name: Upload JAR to release
         uses: softprops/action-gh-release@v2
