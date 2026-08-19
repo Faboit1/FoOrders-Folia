@@ -57,6 +57,10 @@
     </build>
     <repositories>
         <repository>
+            <id>local-libs</id>
+            <url>file://${project.basedir}/libs</url>
+        </repository>
+        <repository>
             <id>spigotmc-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
