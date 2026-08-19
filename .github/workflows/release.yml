@@ -22,6 +22,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Install fo-plugin-core stubs
+        run: mvn -f fo-plugin-core-stubs/pom.xml clean install --batch-mode
+
       - name: Build with Maven
         run: mvn clean package --batch-mode
 
