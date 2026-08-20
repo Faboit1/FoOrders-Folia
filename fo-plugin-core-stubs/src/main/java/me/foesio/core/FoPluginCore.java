@@ -6,6 +6,6 @@ public final class FoPluginCore {
     private FoPluginCore() {}
 
     public static FoCoreContext create(JavaPlugin plugin) {
-        return new FoCoreContext();
+        return new FoCoreContext(plugin);
     }
 }

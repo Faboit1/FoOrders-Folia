@@ -5,10 +5,21 @@ import me.foesio.core.inventory.InventoryCloseSuppressor;
 import me.foesio.core.inventory.InventoryDepositService;
 import me.foesio.core.scheduler.FoScheduler;
 import me.foesio.core.update.UpdateNoticeService;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class FoCoreContext {
+    private final JavaPlugin plugin;
+
+    public FoCoreContext() {
+        this(null);
+    }
+
+    public FoCoreContext(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+
     public FoScheduler scheduler() {
-        return new FoScheduler();
+        return new FoScheduler(plugin);
     }
 
     public void warnIfNativeDialogsUnavailable() {}

@@ -2,12 +2,29 @@ package me.foesio.core.inventory;
 
 import org.bukkit.entity.Player;
 
-public class InventoryCloseSuppressor {
-    public void suppressNextClose(Player player) {}
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-    public boolean consumeSuppressedClose(Player player) {
-        return false;
+public class InventoryCloseSuppressor {
+    private final Set<UUID> suppressed = ConcurrentHashMap.newKeySet();
+
+    public void suppressNextClose(Player player) {
+        if (player != null) {
+            suppressed.add(player.getUniqueId());
+        }
     }
 
-    public void clear(Player player) {}
+    public boolean consumeSuppressedClose(Player player) {
+        if (player == null) {
+            return false;
+        }
+        return suppressed.remove(player.getUniqueId());
+    }
+
+    public void clear(Player player) {
+        if (player != null) {
+            suppressed.remove(player.getUniqueId());
+        }
+    }
 }
