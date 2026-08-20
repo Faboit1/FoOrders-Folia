@@ -6,26 +6,16 @@ public class FoFileLogger {
     private FoFileLogger() {}
 
     public static FoFileLogger create(Plugin plugin) {
-        throw new UnsupportedOperationException("stub");
+        return new FoFileLogger();
     }
 
-    public void configureFromConfig(String path, boolean defaultValue) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void configureFromConfig(String path, boolean defaultValue) {}
 
-    public void info(String message) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void info(String message) {}
 
-    public void warn(String message) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void warn(String message) {}
 
-    public void error(String message, Throwable throwable) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void error(String message, Throwable throwable) {}
 
-    public void close() {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void close() {}
 }

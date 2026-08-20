@@ -8,42 +8,36 @@ import me.foesio.core.update.UpdateNoticeService;
 
 public class FoCoreContext {
     public FoScheduler scheduler() {
-        throw new UnsupportedOperationException("stub");
+        return new FoScheduler();
     }
 
-    public void warnIfNativeDialogsUnavailable() {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void warnIfNativeDialogsUnavailable() {}
 
     public boolean supportsDialogSprites() {
-        throw new UnsupportedOperationException("stub");
+        return false;
     }
 
     public DialogSpriteSupport dialogSpriteSupport() {
-        throw new UnsupportedOperationException("stub");
+        return new DialogSpriteSupport();
     }
 
-    public void metrics(int pluginId) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void metrics(int pluginId) {}
 
     public DialogService dialogService() {
-        throw new UnsupportedOperationException("stub");
+        return new DialogService();
     }
 
     public InventoryCloseSuppressor inventoryCloseSuppressor() {
-        throw new UnsupportedOperationException("stub");
+        return new InventoryCloseSuppressor();
     }
 
     public InventoryDepositService inventoryDeposits() {
-        throw new UnsupportedOperationException("stub");
+        return new InventoryDepositService();
     }
 
     public UpdateNoticeService createUpdateNotices(UpdateNoticeService.UpdateMessenger messenger, String projectId) {
-        throw new UnsupportedOperationException("stub");
+        return new UpdateNoticeService();
     }
 
-    public void close() {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void close() {}
 }

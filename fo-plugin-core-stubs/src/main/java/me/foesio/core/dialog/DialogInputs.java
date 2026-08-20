@@ -10,20 +10,16 @@ public class DialogInputs {
     private DialogInputs() {}
 
     public static DialogInputs create(Plugin plugin, NativeDialogSupport support, FoScheduler scheduler) {
-        throw new UnsupportedOperationException("stub");
+        return new DialogInputs();
     }
 
     public TextInput textInput() {
-        throw new UnsupportedOperationException("stub");
+        return new TextInput();
     }
 
-    public void clear(Player player) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void clear(Player player) {}
 
-    public void close() {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void close() {}
 
     public static class TextInput {
         public void openTextInput(
@@ -31,8 +27,6 @@ public class DialogInputs {
             TextDialogRequest request,
             Consumer<String> onSubmit,
             Runnable onCancel
-        ) {
-            throw new UnsupportedOperationException("stub");
-        }
+        ) {}
     }
 }

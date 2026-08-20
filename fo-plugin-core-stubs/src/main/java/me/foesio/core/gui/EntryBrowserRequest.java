@@ -5,29 +5,29 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 
 public class EntryBrowserRequest {
-    private EntryBrowserRequest() {}
+    EntryBrowserRequest() {}
 
     public static Builder builder() {
         return new Builder();
     }
 
     public int page() {
-        throw new UnsupportedOperationException("stub");
+        return 0;
     }
 
     public Object context() {
-        throw new UnsupportedOperationException("stub");
+        return null;
     }
 
     public EntryBrowserRequest withPage(int page) {
-        throw new UnsupportedOperationException("stub");
+        return this;
     }
 
     public static class Entry {
         private Entry() {}
 
         public static Entry of(String id, ItemStack item) {
-            throw new UnsupportedOperationException("stub");
+            return new Entry();
         }
     }
 
@@ -69,7 +69,7 @@ public class EntryBrowserRequest {
         }
 
         public EntryBrowserRequest build() {
-            throw new UnsupportedOperationException("stub");
+            return new EntryBrowserRequest();
         }
     }
 }

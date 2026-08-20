@@ -7,10 +7,10 @@ public final class LargeNumberParser {
     private LargeNumberParser() {}
 
     public static OptionalInt parsePositiveInt(String input) {
-        throw new UnsupportedOperationException("stub");
+        return OptionalInt.empty();
     }
 
     public static OptionalDouble parsePositiveDouble(String input) {
-        throw new UnsupportedOperationException("stub");
+        return OptionalDouble.empty();
     }
 }

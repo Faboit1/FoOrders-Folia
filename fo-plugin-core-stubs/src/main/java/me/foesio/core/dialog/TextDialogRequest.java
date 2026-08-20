@@ -48,7 +48,7 @@ public class TextDialogRequest {
     }
 
     public static TextDialogRequest number(List<String> body, String initialValue, String placeholder) {
-        throw new UnsupportedOperationException("stub");
+        return new TextDialogRequest("", body, "", initialValue, placeholder, null, null, 200, 200, 100, false, true, false);
     }
 
     public String title() { return title; }

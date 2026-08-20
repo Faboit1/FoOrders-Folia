@@ -6,6 +6,6 @@ public final class FoPluginCore {
     private FoPluginCore() {}
 
     public static FoCoreContext create(JavaPlugin plugin) {
-        throw new UnsupportedOperationException("stub");
+        return new FoCoreContext();
     }
 }

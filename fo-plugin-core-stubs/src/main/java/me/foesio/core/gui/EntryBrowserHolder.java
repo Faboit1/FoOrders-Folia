@@ -5,15 +5,15 @@ import org.bukkit.inventory.InventoryHolder;
 
 public class EntryBrowserHolder implements InventoryHolder {
     public EntryBrowserRequest request() {
-        throw new UnsupportedOperationException("stub");
+        return null;
     }
 
     public int maxPage() {
-        throw new UnsupportedOperationException("stub");
+        return 0;
     }
 
     @Override
     public Inventory getInventory() {
-        throw new UnsupportedOperationException("stub");
+        return null;
     }
 }
