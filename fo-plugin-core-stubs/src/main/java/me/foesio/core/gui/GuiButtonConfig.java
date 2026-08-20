@@ -4,29 +4,29 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 public class GuiButtonConfig {
-    private GuiButtonConfig() {}
+    GuiButtonConfig() {}
 
     public static GuiButtonConfig defaults() {
-        throw new UnsupportedOperationException("stub");
+        return new GuiButtonConfig();
     }
 
     public static GuiButtonConfig fromGuiFile(YamlConfiguration yaml) {
-        throw new UnsupportedOperationException("stub");
+        return new GuiButtonConfig();
     }
 
     public ItemStack search(String searchText) {
-        throw new UnsupportedOperationException("stub");
+        return null;
     }
 
     public ItemStack previousPage(int currentPage, int maxPage) {
-        throw new UnsupportedOperationException("stub");
+        return null;
     }
 
     public ItemStack nextPage(int currentPage, int maxPage) {
-        throw new UnsupportedOperationException("stub");
+        return null;
     }
 
     public ItemStack back() {
-        throw new UnsupportedOperationException("stub");
+        return null;
     }
 }

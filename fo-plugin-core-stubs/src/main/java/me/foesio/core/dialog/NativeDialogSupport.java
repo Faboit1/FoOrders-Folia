@@ -3,41 +3,39 @@ package me.foesio.core.dialog;
 import org.bukkit.plugin.Plugin;
 
 public class NativeDialogSupport {
-    private NativeDialogSupport() {}
+    NativeDialogSupport() {}
 
     public static NativeDialogSupport detect(Plugin plugin, NativeDialogSettings settings) {
-        throw new UnsupportedOperationException("stub");
+        return new NativeDialogSupport();
     }
 
     public boolean configEnabled() {
-        throw new UnsupportedOperationException("stub");
+        return false;
     }
 
     public boolean canUseNativeDialogs() {
-        throw new UnsupportedOperationException("stub");
+        return false;
     }
 
     public boolean serverSupportsNativeDialogs() {
-        throw new UnsupportedOperationException("stub");
+        return false;
     }
 
     public boolean runtimeDisabled() {
-        throw new UnsupportedOperationException("stub");
+        return true;
     }
 
     public String runtimeUnavailableReason() {
-        throw new UnsupportedOperationException("stub");
+        return "stub";
     }
 
     public String unavailableReason() {
-        throw new UnsupportedOperationException("stub");
+        return "stub";
     }
 
     public boolean warnOnFallback() {
-        throw new UnsupportedOperationException("stub");
+        return false;
     }
 
-    public void disableForSession(String reason) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void disableForSession(String reason) {}
 }

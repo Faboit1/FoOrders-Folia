@@ -4,10 +4,10 @@ public final class NumberFormatters {
     private NumberFormatters() {}
 
     public static String money(double value) {
-        throw new UnsupportedOperationException("stub");
+        return String.valueOf(value);
     }
 
     public static String compact(double value) {
-        throw new UnsupportedOperationException("stub");
+        return String.valueOf(value);
     }
 }

@@ -1,7 +1,7 @@
 package me.foesio.core.discord;
 
 public class DiscordWebhookEmbed {
-    private DiscordWebhookEmbed() {}
+    DiscordWebhookEmbed() {}
 
     public static Builder builder() {
         return new Builder();
@@ -33,7 +33,7 @@ public class DiscordWebhookEmbed {
         }
 
         public DiscordWebhookEmbed build() {
-            throw new UnsupportedOperationException("stub");
+            return new DiscordWebhookEmbed();
         }
     }
 }

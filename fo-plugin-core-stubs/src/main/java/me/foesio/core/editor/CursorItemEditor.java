@@ -8,6 +8,6 @@ public final class CursorItemEditor {
     private CursorItemEditor() {}
 
     public static Optional<ItemStack> cloneItem(ItemStack item) {
-        throw new UnsupportedOperationException("stub");
+        return Optional.empty();
     }
 }

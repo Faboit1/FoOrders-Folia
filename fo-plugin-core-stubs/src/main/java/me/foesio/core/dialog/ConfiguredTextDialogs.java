@@ -8,18 +8,16 @@ public class ConfiguredTextDialogs {
     private ConfiguredTextDialogs() {}
 
     public static ConfiguredTextDialogs create(Plugin plugin) {
-        throw new UnsupportedOperationException("stub");
+        return new ConfiguredTextDialogs();
     }
 
     public ConfiguredTextDialogs register(String id, TextDialogRequest fallback) {
-        throw new UnsupportedOperationException("stub");
+        return this;
     }
 
-    public void reload() {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void reload() {}
 
     public TextDialogRequest request(String id, TextDialogRequest fallback, Map<String, String> placeholders) {
-        throw new UnsupportedOperationException("stub");
+        return fallback;
     }
 }

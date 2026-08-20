@@ -33,7 +33,7 @@ public class DiscordWebhookSettings {
     }
 
     public static DiscordWebhookSettings fromSection(ConfigurationSection section, String defaultUsername) {
-        throw new UnsupportedOperationException("stub");
+        return new DiscordWebhookSettings(false, "", defaultUsername, "", false, Duration.ZERO, Map.of());
     }
 
     public boolean enabled() {
@@ -57,10 +57,10 @@ public class DiscordWebhookSettings {
     }
 
     public String normalizedWebhookUrl() {
-        throw new UnsupportedOperationException("stub");
+        return webhookUrl != null ? webhookUrl : "";
     }
 
     public boolean eventEnabled(String eventKey) {
-        throw new UnsupportedOperationException("stub");
+        return false;
     }
 }

@@ -6,10 +6,10 @@ public final class DialogIcons {
     private DialogIcons() {}
 
     public static String withIcon(String text, String iconName) {
-        throw new UnsupportedOperationException("stub");
+        return text;
     }
 
     public static Component inlineTokens(Component component) {
-        throw new UnsupportedOperationException("stub");
+        return component;
     }
 }

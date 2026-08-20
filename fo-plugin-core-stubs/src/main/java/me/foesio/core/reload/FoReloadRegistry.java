@@ -6,18 +6,18 @@ public class FoReloadRegistry {
     private FoReloadRegistry() {}
 
     public static FoReloadRegistry create() {
-        throw new UnsupportedOperationException("stub");
+        return new FoReloadRegistry();
     }
 
     public FoReloadRegistry addConfig(JavaPlugin plugin) {
-        throw new UnsupportedOperationException("stub");
+        return this;
     }
 
     public FoReloadRegistry add(String name, Runnable step) {
-        throw new UnsupportedOperationException("stub");
+        return this;
     }
 
     public FoReloadResult reload() {
-        throw new UnsupportedOperationException("stub");
+        return new FoReloadResult();
     }
 }

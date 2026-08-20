@@ -14,22 +14,14 @@ public class WriteBehindStore<K, V> {
         BiFunction<K, Boolean, V> snapshotFunction,
         BiFunction<K, V, Boolean> saveFunction
     ) {
-        throw new UnsupportedOperationException("stub");
+        return new WriteBehindStore<>();
     }
 
-    public void snapshotAndWriteAsync(K key, boolean unload) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void snapshotAndWriteAsync(K key, boolean unload) {}
 
-    public void flushSynchronously(List<K> keys, boolean unload) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void flushSynchronously(List<K> keys, boolean unload) {}
 
-    public void writeAsync(K key, V value) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void writeAsync(K key, V value) {}
 
-    public void markDirty(K key) {
-        throw new UnsupportedOperationException("stub");
-    }
+    public void markDirty(K key) {}
 }

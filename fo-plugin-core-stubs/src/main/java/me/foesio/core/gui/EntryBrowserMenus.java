@@ -7,14 +7,14 @@ public final class EntryBrowserMenus {
     private EntryBrowserMenus() {}
 
     public static int maxPage(EntryBrowserRequest request) {
-        throw new UnsupportedOperationException("stub");
+        return 0;
     }
 
     public static Inventory createInventory(EntryBrowserRequest request) {
-        throw new UnsupportedOperationException("stub");
+        return null;
     }
 
     public static EntryBrowserClick handleClick(int rawSlot, EntryBrowserHolder holder, ClickType clickType) {
-        throw new UnsupportedOperationException("stub");
+        return new EntryBrowserClick();
     }
 }

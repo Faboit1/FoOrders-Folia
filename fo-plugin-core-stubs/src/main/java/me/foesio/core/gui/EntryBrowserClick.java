@@ -2,11 +2,11 @@ package me.foesio.core.gui;
 
 public class EntryBrowserClick {
     public Action action() {
-        throw new UnsupportedOperationException("stub");
+        return Action.NONE;
     }
 
     public String entryId() {
-        throw new UnsupportedOperationException("stub");
+        return null;
     }
 
     public enum Action {
