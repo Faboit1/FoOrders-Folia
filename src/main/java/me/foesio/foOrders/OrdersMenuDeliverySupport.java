@@ -1,7 +1,5 @@
 package me.foesio.foOrders;
 
-import me.foesio.core.inventory.InventoryDepositService;
-import me.foesio.core.inventory.OverflowPolicy;
 import me.foesio.foOrders.integration.DiscordWebhookNotifier;
 import me.foesio.core.scheduler.FoScheduler;
 import me.foesio.foOrders.storage.HistoryDataStore;
@@ -19,7 +17,6 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +36,6 @@ final class OrdersMenuDeliverySupport {
     private final PlayerDataStore playerDataStore;
     private final HistoryDataStore historyDataStore;
     private final DiscordWebhookNotifier discordWebhookNotifier;
-    private final InventoryDepositService inventoryDepositService;
 
     OrdersMenuDeliverySupport(OrdersMenuManager manager, OrdersMenuInteractionSupport interaction) {
         this.manager = manager;
@@ -53,7 +49,6 @@ final class OrdersMenuDeliverySupport {
         this.playerDataStore = manager.playerDataStore;
         this.historyDataStore = manager.historyDataStore;
         this.discordWebhookNotifier = manager.discordWebhookNotifier;
-        this.inventoryDepositService = manager.inventoryDepositService;
     }
 
     private void openYourOrdersMenu(Player player) {
@@ -1284,7 +1279,28 @@ final class OrdersMenuDeliverySupport {
         if (items == null || items.length == 0) {
             return;
         }
-        inventoryDepositService.deposit(player, Arrays.asList(items), OverflowPolicy.DROP_OVERFLOW, false);
+
+        List<ItemStack> toDeposit = new ArrayList<>();
+        for (ItemStack item : items) {
+            if (item != null && item.getType() != Material.AIR && item.getAmount() > 0) {
+                toDeposit.add(item.clone());
+            }
+        }
+        if (toDeposit.isEmpty()) {
+            return;
+        }
+
+        Map<Integer, ItemStack> overflow = player.getInventory().addItem(toDeposit.toArray(ItemStack[]::new));
+        if (overflow.isEmpty()) {
+            return;
+        }
+
+        Location dropLocation = player.getLocation();
+        for (ItemStack leftover : overflow.values()) {
+            if (leftover != null && leftover.getType() != Material.AIR && leftover.getAmount() > 0) {
+                player.getWorld().dropItemNaturally(dropLocation, leftover);
+            }
+        }
     }
 
     void dropClaimStacksWithDelay(Player player, List<ItemStack> stacksToDrop) {
