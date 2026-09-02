@@ -169,6 +169,7 @@ public final class FoOrders extends JavaPlugin {
         changed |= setDefaultIfMissing(config, "file-logging", false);
         changed |= setDefaultIfMissing(config, NativeDialogConfigDefaults.ENABLED_PATH, true);
         changed |= setDefaultIfMissing(config, "native-dialogs.item-selection", true);
+        changed |= setDefaultIfMissing(config, "native-dialogs.item-selection-max-buttons", 256);
         changed |= setDefaultIfMissing(config, NativeDialogConfigDefaults.WARN_ON_FALLBACK_PATH, true);
         changed |= setDefaultIfMissing(config, DiscordWebhookConfigDefaults.WEBHOOK_URL_PATH, "");
         changed |= setDefaultIfMissing(config, DiscordWebhookConfigDefaults.USERNAME_PATH, "");

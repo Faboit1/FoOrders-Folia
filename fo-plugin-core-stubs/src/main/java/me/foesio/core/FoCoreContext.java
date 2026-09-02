@@ -9,6 +9,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class FoCoreContext {
     private final JavaPlugin plugin;
+    private final FoScheduler scheduler;
+    private final DialogService dialogService;
+    private final DialogSpriteSupport dialogSpriteSupport;
+    private final InventoryCloseSuppressor inventoryCloseSuppressor = new InventoryCloseSuppressor();
+    private final InventoryDepositService inventoryDepositService = new InventoryDepositService();
 
     public FoCoreContext() {
         this(null);
@@ -16,34 +21,50 @@ public class FoCoreContext {
 
     public FoCoreContext(JavaPlugin plugin) {
         this.plugin = plugin;
+        this.scheduler = new FoScheduler(plugin);
+        this.dialogService = new DialogService(plugin);
+        this.dialogSpriteSupport = new DialogSpriteSupport();
     }
 
     public FoScheduler scheduler() {
-        return new FoScheduler(plugin);
+        return scheduler;
     }
 
-    public void warnIfNativeDialogsUnavailable() {}
+    public void warnIfNativeDialogsUnavailable() {
+        if (plugin == null) {
+            return;
+        }
+        var support = dialogService.support();
+        if (support.canUseNativeDialogs() || !support.warnOnFallback()) {
+            return;
+        }
+        String reason = support.unavailableReason();
+        plugin.getLogger().warning(
+            "Native dialogs are unavailable, falling back to inventory menus"
+                + (reason == null ? "." : ": " + reason)
+        );
+    }
 
     public boolean supportsDialogSprites() {
-        return false;
+        return dialogSpriteSupport.available();
     }
 
     public DialogSpriteSupport dialogSpriteSupport() {
-        return new DialogSpriteSupport();
+        return dialogSpriteSupport;
     }
 
     public void metrics(int pluginId) {}
 
     public DialogService dialogService() {
-        return new DialogService();
+        return dialogService;
     }
 
     public InventoryCloseSuppressor inventoryCloseSuppressor() {
-        return new InventoryCloseSuppressor();
+        return inventoryCloseSuppressor;
     }
 
     public InventoryDepositService inventoryDeposits() {
-        return new InventoryDepositService();
+        return inventoryDepositService;
     }
 
     public UpdateNoticeService createUpdateNotices(UpdateNoticeService.UpdateMessenger messenger, String projectId) {

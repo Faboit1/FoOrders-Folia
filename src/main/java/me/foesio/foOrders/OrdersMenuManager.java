@@ -278,7 +278,9 @@ public final class OrdersMenuManager implements Listener {
         if (currentService != null) {
             return currentService;
         }
-        if (dialogService == null || dialogService.support() == null || !dialogService.support().canUseNativeDialogs()) {
+        if (dialogService == null || dialogService.support() == null
+            || !dialogService.support().canUseNativeDialogs()
+            || !dialogService.support().itemSelectionEnabled()) {
             return null;
         }
         try {

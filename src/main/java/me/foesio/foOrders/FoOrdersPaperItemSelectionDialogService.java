@@ -11,6 +11,7 @@ import io.papermc.paper.registry.data.dialog.type.DialogType;
 import me.foesio.core.dialog.DialogButton;
 import me.foesio.core.dialog.DialogIcons;
 import me.foesio.core.dialog.NativeDialogSupport;
+import me.foesio.foOrders.integration.CheeseCoreSprites;
 import me.foesio.foOrders.util.TextFormat;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
@@ -34,12 +35,17 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 
 final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelectionDialogService {
-    private static final String INPUT_KEY = "value";
+    private static final String INPUT_KEY = "search";
     private static final int BODY_WIDTH = 320;
-    private static final int INPUT_WIDTH = 300;
-    private static final int BUTTON_WIDTH = 144;
-    private static final int COLUMNS = 3;
+    private static final int INPUT_WIDTH = 200;
+    private static final int BUTTON_WIDTH = 80;
+    private static final int SEARCH_BUTTON_WIDTH = 60;
+    private static final int COLUMNS = 4;
     private static final int MAX_CACHED_DIALOGS = 96;
+    // A multi_action dialog is delivered in a single packet, so the whole item
+    // list (~1300 materials) cannot be sent at once. Show a bounded page and
+    // let the search input reach the rest.
+    private static final int DEFAULT_MAX_BUTTONS = 256;
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
     private static final ClickCallback.Options CACHED_CALLBACK_OPTIONS = ClickCallback.Options.builder()
         .uses(ClickCallback.UNLIMITED_USES)
@@ -106,7 +112,7 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
         pendingSelections.put(playerId, pending);
 
         try {
-            ((Audience) player).showDialog(cachedDialog(safeCurrentKey, filter));
+            ((Audience) player).showDialog(cachedDialog(player, safeCurrentKey, filter));
             return true;
         } catch (RuntimeException | LinkageError exception) {
             pendingSelections.remove(playerId, pending);
@@ -120,31 +126,47 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
         }
     }
 
-    private Dialog cachedDialog(String currentChoiceKey, String filter) {
+    private Dialog cachedDialog(Player viewer, String currentChoiceKey, String filter) {
         String normalizedFilter = normalizeFilter(filter);
-        DialogCacheKey key = new DialogCacheKey(manager.itemSelectContentRevision(), currentChoiceKey, normalizedFilter);
+        String versionId = CheeseCoreSprites.viewerVersionId(viewer);
+        DialogCacheKey key = new DialogCacheKey(
+            manager.itemSelectContentRevision(),
+            versionId,
+            currentChoiceKey,
+            normalizedFilter
+        );
         Dialog cached = dialogCache.get(key);
         if (cached != null) {
             return cached;
         }
 
-        Dialog dialog = createDialog(currentChoiceKey, normalizedFilter);
+        Dialog dialog = createDialog(viewer, versionId, currentChoiceKey, normalizedFilter);
         dialogCache.put(key, dialog);
         return dialog;
     }
 
-    private Dialog createDialog(String currentChoiceKey, String filter) {
+    private Dialog createDialog(Player viewer, String versionId, String currentChoiceKey, String filter) {
         ItemSelectState itemSelectState = new ItemSelectState();
         itemSelectState.search = filter;
-        List<OrderableItemOption> choices = manager.itemSupport.getCachedFilteredSortedItems(itemSelectState);
+        List<OrderableItemOption> matches = manager.itemSupport.getCachedFilteredSortedItems(itemSelectState);
+
+        int limit = maxButtons();
+        List<OrderableItemOption> shown = matches.size() > limit
+            ? List.copyOf(matches.subList(0, limit))
+            : matches;
 
         return Dialog.create(factory -> factory.empty()
-            .base(base(currentChoiceKey, choices, filter))
-            .type(DialogType.multiAction(buttons(currentChoiceKey, choices), null, COLUMNS)));
+            .base(base(currentChoiceKey, matches, shown, filter))
+            .type(DialogType.multiAction(buttons(viewer, versionId, currentChoiceKey, shown), null, COLUMNS)));
     }
 
-    private DialogBase base(String currentChoiceKey, List<OrderableItemOption> choices, String filter) {
-        Component title = component(DialogIcons.withIcon("Select Item", "chest"));
+    private DialogBase base(
+        String currentChoiceKey,
+        List<OrderableItemOption> matches,
+        List<OrderableItemOption> shown,
+        String filter
+    ) {
+        Component title = component(DialogIcons.withIcon("Order", "chest"));
         List<DialogBody> body = new ArrayList<>();
         OrderableItemOption current = findChoice(currentChoiceKey);
         if (current != null) {
@@ -157,8 +179,14 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
                 16
             ));
         }
-        if (choices.isEmpty()) {
+        if (matches.isEmpty()) {
             body.add(DialogBody.plainMessage(component(OrdersMenuManager.MUTED + "No items match this search."), BODY_WIDTH));
+        } else if (shown.size() < matches.size()) {
+            body.add(DialogBody.plainMessage(
+                component(OrdersMenuManager.MUTED + "Showing " + shown.size() + " of " + matches.size()
+                    + " items. Search to narrow them down."),
+                BODY_WIDTH
+            ));
         }
 
         return DialogBase.builder(title)
@@ -176,11 +204,16 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
             .build();
     }
 
-    private List<ActionButton> buttons(String currentChoiceKey, List<OrderableItemOption> choices) {
+    private List<ActionButton> buttons(
+        Player viewer,
+        String versionId,
+        String currentChoiceKey,
+        List<OrderableItemOption> choices
+    ) {
         List<ActionButton> buttons = new ArrayList<>(choices.size() + 1);
         buttons.add(searchButton());
         for (OrderableItemOption choice : choices) {
-            buttons.add(choiceButton(choice, choice.choiceKey().equals(currentChoiceKey)));
+            buttons.add(choiceButton(viewer, versionId, choice, choice.choiceKey().equals(currentChoiceKey)));
         }
         return List.copyOf(buttons);
     }
@@ -188,22 +221,21 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
     private ActionButton searchButton() {
         ButtonVisual visual = buttonVisuals.computeIfAbsent(
             ButtonVisualKey.searchButton(),
-            ignored -> visual(DialogButton.search("Search", "Search items.", BUTTON_WIDTH))
+            ignored -> new ButtonVisual(component("Search"), component("Search items."), SEARCH_BUTTON_WIDTH)
         );
         return visual.withAction(DialogAction.customClick(this::handleSearch, CACHED_CALLBACK_OPTIONS));
     }
 
-    private ActionButton choiceButton(OrderableItemOption choice, boolean current) {
-        ButtonVisualKey key = ButtonVisualKey.choice(choice.choiceKey(), choice.material(), choice.choiceLabel(), current);
+    private ActionButton choiceButton(Player viewer, String versionId, OrderableItemOption choice, boolean current) {
+        ButtonVisualKey key = ButtonVisualKey.choice(versionId, choice.choiceKey(), choice.choiceLabel(), current);
         ButtonVisual visual = buttonVisuals.computeIfAbsent(key, ignored -> {
             String color = current ? DialogButton.CONFIRM_ICON_COLOR : OrdersMenuManager.WHITE;
             String tooltip = current ? "Current item." : "Choose this item.";
-            return visual(DialogButton.icon(
-                choice.material().name().toLowerCase(Locale.ROOT),
-                color + choice.choiceLabel(),
-                tooltip,
+            return new ButtonVisual(
+                label(viewer, choice, color + choice.choiceLabel()),
+                component(tooltip),
                 BUTTON_WIDTH
-            ));
+            );
         });
         return visual.withAction(DialogAction.customClick(
             (response, audience) -> handleSelect(audience, choice.choiceKey()),
@@ -211,8 +243,21 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
         ));
     }
 
-    private ButtonVisual visual(DialogButton button) {
-        return new ButtonVisual(component(button.labelWithIcon()), component(button.tooltip()), button.width());
+    /**
+     * The button label: the item's atlas sprite followed by its name, matching
+     * the {@code {atlas, sprite, extra}} shape a vanilla dialog uses. Falls back
+     * to a plain text label when CheeseCore is absent or has no sprite for this
+     * material, so the dialog still works without it.
+     */
+    private Component label(Player viewer, OrderableItemOption choice, String text) {
+        Component name = component(text);
+        Component sprite = CheeseCoreSprites.icon(choice.material(), viewer);
+        return sprite == null ? name : sprite.append(Component.text(" ")).append(name);
+    }
+
+    private int maxButtons() {
+        int configured = manager.plugin.getConfig().getInt("native-dialogs.item-selection-max-buttons", DEFAULT_MAX_BUTTONS);
+        return configured <= 0 ? DEFAULT_MAX_BUTTONS : configured;
     }
 
     private void handleSearch(DialogResponseView view, Audience audience) {
@@ -324,7 +369,7 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
     ) {
     }
 
-    private record DialogCacheKey(int contentRevision, String currentChoiceKey, String filter) {
+    private record DialogCacheKey(int contentRevision, String versionId, String currentChoiceKey, String filter) {
     }
 
     private record ButtonVisual(Component label, Component tooltip, int width) {
@@ -334,18 +379,18 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
     }
 
     private record ButtonVisualKey(
+        String versionId,
         String choiceKey,
-        Material material,
         String label,
         boolean current,
         boolean search
     ) {
         static ButtonVisualKey searchButton() {
-            return new ButtonVisualKey("", null, "Search", false, true);
+            return new ButtonVisualKey("", "", "Search", false, true);
         }
 
-        static ButtonVisualKey choice(String choiceKey, Material material, String label, boolean current) {
-            return new ButtonVisualKey(choiceKey, material, label, current, false);
+        static ButtonVisualKey choice(String versionId, String choiceKey, String label, boolean current) {
+            return new ButtonVisualKey(versionId, choiceKey, label, current, false);
         }
     }
 }
