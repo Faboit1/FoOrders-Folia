@@ -6,6 +6,7 @@ folia-supported: true
 authors: [ Carrotio ]
 description: An actually well-made order system
 depend: [ Vault ]
+softdepend: [ CheeseCore ]
 commands:
   order:
     description: Opens the orders menu

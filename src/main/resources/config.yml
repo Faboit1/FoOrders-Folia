@@ -26,6 +26,10 @@ native-dialogs:
   item-selection: true
   # Sends admins one warning when native dialogs are enabled but unavailable and the plugin falls back.
   warn-on-fallback: true
+  # How many item buttons one item selection dialog may show at once.
+  # The whole dialog is sent in a single packet, so every orderable item cannot
+  # fit at once; players reach the rest through the search box. Raise carefully.
+  item-selection-max-buttons: 256
 
 # Broadcast a global chat message when a new order is created.
 announce-created-orders-in-chat: false
