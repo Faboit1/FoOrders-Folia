@@ -26,11 +26,13 @@ native-dialogs:
   item-selection: true
   # Sends admins one warning when native dialogs are enabled but unavailable and the plugin falls back.
   warn-on-fallback: true
-  # How wide each item button is, in pixels. Raise this if long item names
-  # ("Acacia Pressure Plate") are cut off; lower it to fit more on screen.
-  item-selection-button-width: 150
-  # How many item buttons sit side by side in a row.
-  item-selection-columns: 4
+  # How wide each item button is, in pixels.
+  # "auto" sizes every button to the longest item name currently shown, so
+  # nothing is cut off. Set a number instead to force a fixed width.
+  item-selection-button-width: auto
+  # How many item buttons sit side by side in a row. Lower this if the dialog
+  # is wider than your screen; raise it to fit more items per row.
+  item-selection-columns: 3
   # How many item buttons one item selection dialog may show at once.
   # The whole dialog is sent in a single packet, so every orderable item cannot
   # fit at once; players reach the rest through the search box. Raise carefully.

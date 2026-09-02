@@ -44,14 +44,21 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
     // list (~1300 materials) cannot be sent at once. Show a bounded page and
     // let the search input reach the rest.
     private static final int DEFAULT_MAX_BUTTONS = 256;
-    // Wide enough for the longest item names ("Acacia Pressure Plate") without
-    // the client truncating them mid-word.
-    private static final int DEFAULT_BUTTON_WIDTH = 150;
-    private static final int DEFAULT_COLUMNS = 4;
+    // Button width is "auto" by default: no single number fits both "Anvil" and
+    // "Waxed Oxidized Cut Copper Stairs", so the width is measured from the
+    // longest label actually on screen. A number in config overrides it.
+    private static final String AUTO_BUTTON_WIDTH = "auto";
+    private static final int DEFAULT_COLUMNS = 3;
     private static final int MIN_BUTTON_WIDTH = 40;
     private static final int MAX_BUTTON_WIDTH = 1024;
     private static final int MIN_COLUMNS = 1;
     private static final int MAX_COLUMNS = 16;
+    // Minecraft's default font is variable width, averaging a little over six
+    // pixels a character, so widths are estimated in half pixels to avoid
+    // rounding every label down.
+    private static final int HALF_PIXELS_PER_CHARACTER = 13;
+    // Room for the button's own border plus the item sprite ahead of the label.
+    private static final int BUTTON_PADDING = 30;
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
     private static final ClickCallback.Options CACHED_CALLBACK_OPTIONS = ClickCallback.Options.builder()
         .uses(ClickCallback.UNLIMITED_USES)
@@ -161,7 +168,7 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
             ? List.copyOf(matches.subList(0, limit))
             : matches;
 
-        int buttonWidth = buttonWidth();
+        int buttonWidth = buttonWidth(shown);
         int columns = columns();
 
         return Dialog.create(factory -> factory.empty()
@@ -292,14 +299,59 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
         return configured <= 0 ? DEFAULT_MAX_BUTTONS : configured;
     }
 
-    /** How wide each item button is, in pixels. */
-    private int buttonWidth() {
-        return clampedSetting(
-            "native-dialogs.item-selection-button-width",
-            DEFAULT_BUTTON_WIDTH,
-            MIN_BUTTON_WIDTH,
-            MAX_BUTTON_WIDTH
-        );
+    /**
+     * How wide each item button is, in pixels.
+     *
+     * <p>A positive number in config forces that width. Anything else - the
+     * default {@code auto}, a blank value, or a number below one - measures the
+     * longest label actually being shown, so short searches get compact buttons
+     * and long item names still fit.
+     */
+    private int buttonWidth(List<OrderableItemOption> shown) {
+        Object configured = manager.plugin.getConfig().get("native-dialogs.item-selection-button-width");
+        Integer forced = fixedWidth(configured);
+        if (forced != null) {
+            return clamp(forced, MIN_BUTTON_WIDTH, MAX_BUTTON_WIDTH);
+        }
+        return autoButtonWidth(shown);
+    }
+
+    /** The width a config value forces, or null when it asks for auto sizing. */
+    private Integer fixedWidth(Object configured) {
+        if (configured instanceof Number number) {
+            int value = number.intValue();
+            return value > 0 ? value : null;
+        }
+        if (configured instanceof String text) {
+            String trimmed = text.trim();
+            if (trimmed.isEmpty() || AUTO_BUTTON_WIDTH.equalsIgnoreCase(trimmed)) {
+                return null;
+            }
+            try {
+                int value = Integer.parseInt(trimmed);
+                return value > 0 ? value : null;
+            } catch (NumberFormatException exception) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /** A width wide enough for the longest label in this batch of buttons. */
+    private int autoButtonWidth(List<OrderableItemOption> shown) {
+        int longestLabel = 0;
+        for (OrderableItemOption choice : shown) {
+            String label = choice.choiceLabel();
+            if (label != null) {
+                longestLabel = Math.max(longestLabel, label.length());
+            }
+        }
+        int estimated = (longestLabel * HALF_PIXELS_PER_CHARACTER) / 2 + BUTTON_PADDING;
+        return clamp(estimated, MIN_BUTTON_WIDTH, MAX_BUTTON_WIDTH);
+    }
+
+    private int clamp(int value, int minimum, int maximum) {
+        return Math.max(minimum, Math.min(maximum, value));
     }
 
     /** How many item buttons sit side by side in a row. */
