@@ -36,6 +36,8 @@ public final class FoOrders extends JavaPlugin {
     private static final String LEGACY_PLUGIN_TITLE_PATH = "plugin-title";
     private static final String MODRINTH_PROJECT_ID = "foorders";
     private static final int BSTATS_PLUGIN_ID = 32420;
+    /** The fixed item button width an earlier build backfilled into configs. */
+    private static final int BACKFILLED_BUTTON_WIDTH = 150;
 
     private OrdersMenuManager ordersMenuManager;
     private PluginMessages messages;
@@ -169,9 +171,10 @@ public final class FoOrders extends JavaPlugin {
         changed |= setDefaultIfMissing(config, "file-logging", false);
         changed |= setDefaultIfMissing(config, NativeDialogConfigDefaults.ENABLED_PATH, true);
         changed |= setDefaultIfMissing(config, "native-dialogs.item-selection", true);
-        changed |= setDefaultIfMissing(config, "native-dialogs.item-selection-button-width", 150);
-        changed |= setDefaultIfMissing(config, "native-dialogs.item-selection-columns", 4);
+        changed |= setDefaultIfMissing(config, "native-dialogs.item-selection-button-width", "auto");
+        changed |= setDefaultIfMissing(config, "native-dialogs.item-selection-columns", 3);
         changed |= setDefaultIfMissing(config, "native-dialogs.item-selection-max-buttons", 256);
+        changed |= migrateFixedButtonWidth(config);
         changed |= setDefaultIfMissing(config, NativeDialogConfigDefaults.WARN_ON_FALLBACK_PATH, true);
         changed |= setDefaultIfMissing(config, DiscordWebhookConfigDefaults.WEBHOOK_URL_PATH, "");
         changed |= setDefaultIfMissing(config, DiscordWebhookConfigDefaults.USERNAME_PATH, "");
@@ -180,6 +183,26 @@ public final class FoOrders extends JavaPlugin {
         if (changed) {
             saveConfig();
         }
+    }
+
+    /**
+     * Moves configs off the fixed 150px item button width that an earlier build
+     * wrote automatically. That width was never chosen by anyone and truncates
+     * the longer item names, so it becomes "auto"; a width someone actually
+     * picked is left alone.
+     */
+    private boolean migrateFixedButtonWidth(FileConfiguration config) {
+        String path = "native-dialogs.item-selection-button-width";
+        if (!config.isInt(path) || config.getInt(path) != BACKFILLED_BUTTON_WIDTH) {
+            return false;
+        }
+
+        config.set(path, "auto");
+        getLogger().info(
+            "Item selection buttons now size themselves to the longest item name."
+                + " Set " + path + " to a number in config.yml to force a fixed width again."
+        );
+        return true;
     }
 
     private boolean removeLegacyPluginTitle(FileConfiguration config) {
