@@ -38,14 +38,20 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
     private static final String INPUT_KEY = "search";
     private static final int BODY_WIDTH = 320;
     private static final int INPUT_WIDTH = 200;
-    private static final int BUTTON_WIDTH = 80;
     private static final int SEARCH_BUTTON_WIDTH = 60;
-    private static final int COLUMNS = 4;
     private static final int MAX_CACHED_DIALOGS = 96;
     // A multi_action dialog is delivered in a single packet, so the whole item
     // list (~1300 materials) cannot be sent at once. Show a bounded page and
     // let the search input reach the rest.
     private static final int DEFAULT_MAX_BUTTONS = 256;
+    // Wide enough for the longest item names ("Acacia Pressure Plate") without
+    // the client truncating them mid-word.
+    private static final int DEFAULT_BUTTON_WIDTH = 150;
+    private static final int DEFAULT_COLUMNS = 4;
+    private static final int MIN_BUTTON_WIDTH = 40;
+    private static final int MAX_BUTTON_WIDTH = 1024;
+    private static final int MIN_COLUMNS = 1;
+    private static final int MAX_COLUMNS = 16;
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
     private static final ClickCallback.Options CACHED_CALLBACK_OPTIONS = ClickCallback.Options.builder()
         .uses(ClickCallback.UNLIMITED_USES)
@@ -155,9 +161,16 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
             ? List.copyOf(matches.subList(0, limit))
             : matches;
 
+        int buttonWidth = buttonWidth();
+        int columns = columns();
+
         return Dialog.create(factory -> factory.empty()
             .base(base(currentChoiceKey, matches, shown, filter))
-            .type(DialogType.multiAction(buttons(viewer, versionId, currentChoiceKey, shown), null, COLUMNS)));
+            .type(DialogType.multiAction(
+                buttons(viewer, versionId, currentChoiceKey, shown, buttonWidth),
+                null,
+                columns
+            )));
     }
 
     private DialogBase base(
@@ -208,12 +221,19 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
         Player viewer,
         String versionId,
         String currentChoiceKey,
-        List<OrderableItemOption> choices
+        List<OrderableItemOption> choices,
+        int buttonWidth
     ) {
         List<ActionButton> buttons = new ArrayList<>(choices.size() + 1);
         buttons.add(searchButton());
         for (OrderableItemOption choice : choices) {
-            buttons.add(choiceButton(viewer, versionId, choice, choice.choiceKey().equals(currentChoiceKey)));
+            buttons.add(choiceButton(
+                viewer,
+                versionId,
+                choice,
+                choice.choiceKey().equals(currentChoiceKey),
+                buttonWidth
+            ));
         }
         return List.copyOf(buttons);
     }
@@ -226,15 +246,27 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
         return visual.withAction(DialogAction.customClick(this::handleSearch, CACHED_CALLBACK_OPTIONS));
     }
 
-    private ActionButton choiceButton(Player viewer, String versionId, OrderableItemOption choice, boolean current) {
-        ButtonVisualKey key = ButtonVisualKey.choice(versionId, choice.choiceKey(), choice.choiceLabel(), current);
+    private ActionButton choiceButton(
+        Player viewer,
+        String versionId,
+        OrderableItemOption choice,
+        boolean current,
+        int buttonWidth
+    ) {
+        ButtonVisualKey key = ButtonVisualKey.choice(
+            versionId,
+            choice.choiceKey(),
+            choice.choiceLabel(),
+            current,
+            buttonWidth
+        );
         ButtonVisual visual = buttonVisuals.computeIfAbsent(key, ignored -> {
             String color = current ? DialogButton.CONFIRM_ICON_COLOR : OrdersMenuManager.WHITE;
             String tooltip = current ? "Current item." : "Choose this item.";
             return new ButtonVisual(
                 label(viewer, choice, color + choice.choiceLabel()),
                 component(tooltip),
-                BUTTON_WIDTH
+                buttonWidth
             );
         });
         return visual.withAction(DialogAction.customClick(
@@ -258,6 +290,34 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
     private int maxButtons() {
         int configured = manager.plugin.getConfig().getInt("native-dialogs.item-selection-max-buttons", DEFAULT_MAX_BUTTONS);
         return configured <= 0 ? DEFAULT_MAX_BUTTONS : configured;
+    }
+
+    /** How wide each item button is, in pixels. */
+    private int buttonWidth() {
+        return clampedSetting(
+            "native-dialogs.item-selection-button-width",
+            DEFAULT_BUTTON_WIDTH,
+            MIN_BUTTON_WIDTH,
+            MAX_BUTTON_WIDTH
+        );
+    }
+
+    /** How many item buttons sit side by side in a row. */
+    private int columns() {
+        return clampedSetting("native-dialogs.item-selection-columns", DEFAULT_COLUMNS, MIN_COLUMNS, MAX_COLUMNS);
+    }
+
+    /**
+     * Reads an int setting, falling back to the default when it is unset or
+     * zero and clamping anything out of range, so a mistyped value cannot make
+     * the client reject the whole dialog.
+     */
+    private int clampedSetting(String path, int fallback, int minimum, int maximum) {
+        int configured = manager.plugin.getConfig().getInt(path, fallback);
+        if (configured <= 0) {
+            configured = fallback;
+        }
+        return Math.max(minimum, Math.min(maximum, configured));
     }
 
     private void handleSearch(DialogResponseView view, Audience audience) {
@@ -383,14 +443,21 @@ final class FoOrdersPaperItemSelectionDialogService implements FoOrdersItemSelec
         String choiceKey,
         String label,
         boolean current,
-        boolean search
+        boolean search,
+        int width
     ) {
         static ButtonVisualKey searchButton() {
-            return new ButtonVisualKey("", "", "Search", false, true);
+            return new ButtonVisualKey("", "", "Search", false, true, SEARCH_BUTTON_WIDTH);
         }
 
-        static ButtonVisualKey choice(String versionId, String choiceKey, String label, boolean current) {
-            return new ButtonVisualKey(versionId, choiceKey, label, current, false);
+        static ButtonVisualKey choice(
+            String versionId,
+            String choiceKey,
+            String label,
+            boolean current,
+            int width
+        ) {
+            return new ButtonVisualKey(versionId, choiceKey, label, current, false, width);
         }
     }
 }
