@@ -32,6 +32,7 @@ public final class FoOrdersDialogInputService {
     private DialogInputs inputs;
     private EnchantDialogConfig enchantDialogConfig;
     private FoOrdersEnchantDialogService enchantDialogService;
+    private FoOrdersTextInputDialogService textInputDialogService;
 
     public FoOrdersDialogInputService(FoOrders plugin, FoScheduler scheduler, FoFileLogger fileLogger) {
         this.plugin = Objects.requireNonNull(plugin, "plugin");
@@ -56,12 +57,14 @@ public final class FoOrdersDialogInputService {
     public void reloadSupport() {
         closeDialogInputs();
         enchantDialogService = null;
+        textInputDialogService = null;
         support = NativeDialogSupport.detect(
             plugin,
             NativeDialogSettings.fromConfig(plugin.getConfig().getConfigurationSection("native-dialogs"))
         );
         inputs = DialogInputs.create(plugin, support, scheduler);
         enchantDialogService = createEnchantDialogService();
+        textInputDialogService = createTextInputDialogService();
         logDialogMode();
     }
 
@@ -78,6 +81,14 @@ public final class FoOrdersDialogInputService {
         }
 
         TextDialogRequest request = request(inputType, initialValue, targetLabel);
+
+        FoOrdersTextInputDialogService currentTextInputs = textInputDialogService;
+        if (currentTextInputs != null) {
+            // Report the real outcome: claiming success when nothing opened is
+            // what made the amount and price buttons look dead.
+            return currentTextInputs.open(player, request, onSubmit, onCancel);
+        }
+
         DialogInputs currentInputs = inputs;
         if (currentInputs == null) {
             return false;
@@ -251,6 +262,29 @@ public final class FoOrdersDialogInputService {
         } catch (ReflectiveOperationException | LinkageError | ClassCastException exception) {
             support.disableForSession("FoOrders enchant dialog unavailable: " + exception.getMessage());
             warn("Native enchant dialog unavailable. Using inventory fallback: " + exception.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Loads the Paper text input dialog reflectively, so a server without the
+     * Paper dialog API still loads the plugin and falls back instead of dying
+     * on a missing class.
+     */
+    private FoOrdersTextInputDialogService createTextInputDialogService() {
+        if (support == null || !support.canUseNativeDialogs()) {
+            return null;
+        }
+        try {
+            Class<?> serviceClass = Class.forName("me.foesio.foOrders.dialog.FoOrdersPaperTextInputDialogService");
+            Constructor<?> constructor = serviceClass.getConstructor(
+                FoOrders.class,
+                NativeDialogSupport.class,
+                FoScheduler.class
+            );
+            return (FoOrdersTextInputDialogService) constructor.newInstance(plugin, support, scheduler);
+        } catch (ReflectiveOperationException | LinkageError | ClassCastException exception) {
+            warn("Native text input dialog unavailable: " + exception.getMessage());
             return null;
         }
     }
