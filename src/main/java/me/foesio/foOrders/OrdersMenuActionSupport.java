@@ -85,7 +85,7 @@ final class OrdersMenuActionSupport {
         manager.viewSupport.openItemSelectMenu(player, resetPage);
     }
 
-    private void openItemSelection(Player player) {
+    void openItemSelection(Player player) {
         if (!manager.plugin.getConfig().getBoolean("native-dialogs.enabled", true)
             || !manager.itemSelectionDialogsEnabled
             || manager.dialogService() == null) {
