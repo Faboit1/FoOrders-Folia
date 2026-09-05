@@ -9,6 +9,7 @@ import me.foesio.core.logging.FoFileLogger;
 import me.foesio.core.scheduler.FoScheduler;
 import me.foesio.foOrders.integration.DiscordWebhookNotifier;
 import me.foesio.foOrders.config.GuiConfigManager;
+import me.foesio.foOrders.config.GuiSounds;
 import me.foesio.foOrders.dialog.FoOrdersDialogInputService;
 import me.foesio.foOrders.storage.CustomItemStore;
 import me.foesio.foOrders.storage.HistoryDataStore;
@@ -197,6 +198,7 @@ public final class OrdersMenuManager implements Listener {
     final OrdersMenuItemSupport itemSupport;
     final PluginMessages messages;
     final GuiConfigManager guiConfigManager;
+    final GuiSounds guiSounds;
     final InventoryCloseSuppressor inventoryCloseSuppressor;
     final InventoryDepositService inventoryDepositService;
     final FoFileLogger fileLogger;
@@ -252,6 +254,7 @@ public final class OrdersMenuManager implements Listener {
         this.historyDataStore = historyDataStore;
         this.messages = messages;
         this.guiConfigManager = guiConfigManager;
+        this.guiSounds = new GuiSounds(plugin);
         this.dialogInputService = dialogInputService;
         this.dialogService = dialogService;
         this.inventoryCloseSuppressor = inventoryCloseSuppressor;
@@ -305,6 +308,10 @@ public final class OrdersMenuManager implements Listener {
 
     GuiConfigManager guis() {
         return guiConfigManager;
+    }
+
+    GuiSounds sounds() {
+        return guiSounds;
     }
 
     GuiButtonConfig guiButtons() {
@@ -533,6 +540,7 @@ public final class OrdersMenuManager implements Listener {
             parsedNames.add(normalizedName);
         }
         blacklistedOrderNames = Set.copyOf(parsedNames);
+        guiSounds.reload();
         invalidateItemSelectCaches();
     }
 

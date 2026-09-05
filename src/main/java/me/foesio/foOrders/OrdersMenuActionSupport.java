@@ -343,6 +343,7 @@ final class OrdersMenuActionSupport {
             playerData.setSortIndex((playerData.getSortIndex() + 1) % SORT_OPTIONS.size());
             playerDataStore.save(playerId);
             viewState.page = 1;
+            manager.sounds().click(player);
             refreshMainMenuDebounced(player);
             return;
         }
@@ -351,38 +352,47 @@ final class OrdersMenuActionSupport {
             playerData.setFilterIndex((playerData.getFilterIndex() + 1) % FILTER_OPTIONS.size());
             playerDataStore.save(playerId);
             viewState.page = 1;
+            manager.sounds().click(player);
             refreshMainMenuDebounced(player);
             return;
         }
 
         if (rawSlot == refreshSlot) {
             if (manager.tryMarkOrderMenuRefresh(player)) {
+                manager.sounds().click(player);
                 refreshMainMenu(player);
             }
             return;
         }
 
         if (rawSlot == searchSlot) {
+            manager.sounds().click(player);
             openSignInput(player, SignInputType.MAIN_SEARCH);
             return;
         }
 
         if (rawSlot == mainBackSlot && viewState.page > 1) {
             viewState.page--;
+            manager.sounds().pageTurn(player);
             refreshMainMenu(player);
             return;
         }
 
         if (rawSlot == mainNextSlot) {
-            int pageCount = calculatePageCount(getCachedVisibleMainOrders(viewState, playerData).size(), orderSlots.size());
+            int pageCount = calculatePageCount(
+                getCachedVisibleMainOrders(viewState, playerData).size(),
+                manager.viewSupport.mainOrdersPerPage(orderSlots)
+            );
             if (viewState.page < pageCount) {
                 viewState.page++;
+                manager.sounds().pageTurn(player);
                 refreshMainMenu(player);
             }
             return;
         }
 
         if (rawSlot == yourOrdersSlot) {
+            manager.sounds().click(player);
             openYourOrdersMenu(player);
             return;
         }
@@ -398,11 +408,16 @@ final class OrdersMenuActionSupport {
 
         int orderSlotIndex = orderSlots.indexOf(rawSlot);
         if (orderSlotIndex >= 0) {
-            int orderIndex = (viewState.page - 1) * orderSlots.size() + orderSlotIndex;
+            int perPage = manager.viewSupport.mainOrdersPerPage(orderSlots);
+            if (orderSlotIndex >= perPage) {
+                return;
+            }
+            int orderIndex = (viewState.page - 1) * perPage + orderSlotIndex;
             List<MainOrderView> visibleOrders = getCachedVisibleMainOrders(viewState, playerData);
             if (orderIndex < 0 || orderIndex >= visibleOrders.size()) {
                 return;
             }
+            manager.sounds().click(player);
 
             MainOrderView selected = visibleOrders.get(orderIndex);
             if (isAdminOrderModerationClick(player, clickType)) {

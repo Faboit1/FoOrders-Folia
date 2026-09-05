@@ -326,7 +326,7 @@ final class OrdersMenuViewSupport {
         List<Integer> orderSlots = guiSlots("layout.main.order-slots", MAIN_ORDER_SLOTS, 54);
         List<MainOrderView> visibleOrders = getVisibleMainOrders(viewState, playerData);
         viewState.visibleMainOrders = visibleOrders;
-        int pageCount = calculatePageCount(visibleOrders.size(), orderSlots.size());
+        int pageCount = calculatePageCount(visibleOrders.size(), mainOrdersPerPage(orderSlots));
         if (viewState.page < 1) {
             viewState.page = 1;
         }
@@ -1438,7 +1438,7 @@ final class OrdersMenuViewSupport {
         List<Integer> orderSlots = guiSlots("layout.main.order-slots", MAIN_ORDER_SLOTS, topInventory.getSize());
         List<MainOrderView> visibleOrders = getVisibleMainOrders(viewState, playerData);
         viewState.visibleMainOrders = visibleOrders;
-        int pageCount = calculatePageCount(visibleOrders.size(), orderSlots.size());
+        int pageCount = calculatePageCount(visibleOrders.size(), mainOrdersPerPage(orderSlots));
         if (viewState.page < 1) {
             viewState.page = 1;
         }
@@ -1507,8 +1507,9 @@ final class OrdersMenuViewSupport {
 
     void populateMainOrders(Player viewer, Inventory menu, List<MainOrderView> visibleOrders, int page, List<Integer> orderSlots) {
         boolean canModerate = canModerateOrders(viewer);
-        int startIndex = (page - 1) * orderSlots.size();
-        for (int slotIndex = 0; slotIndex < orderSlots.size(); slotIndex++) {
+        int perPage = mainOrdersPerPage(orderSlots);
+        int startIndex = (page - 1) * perPage;
+        for (int slotIndex = 0; slotIndex < perPage; slotIndex++) {
             int index = startIndex + slotIndex;
             if (index >= visibleOrders.size()) {
                 break;
@@ -1613,6 +1614,23 @@ final class OrdersMenuViewSupport {
     }
 
     int calculatePageCount(int totalItems, int pageSize) {
-        return Math.max(1, (int) Math.ceil(totalItems / (double) pageSize));
+        return Math.max(1, (int) Math.ceil(totalItems / (double) Math.max(1, pageSize)));
+    }
+
+    /**
+     * How many orders one page of the main menu shows.
+     *
+     * <p>Defaults to every configured order slot, so the page arrows only appear
+     * once there are more orders than fit on screen. Setting
+     * {@code main-orders-per-page} lower pages sooner, which is also the way to
+     * see the arrows on a server with few orders.
+     */
+    int mainOrdersPerPage(List<Integer> orderSlots) {
+        int slotCount = Math.max(1, orderSlots.size());
+        int configured = manager.plugin.getConfig().getInt("main-orders-per-page", 0);
+        if (configured <= 0) {
+            return slotCount;
+        }
+        return Math.min(configured, slotCount);
     }
 }

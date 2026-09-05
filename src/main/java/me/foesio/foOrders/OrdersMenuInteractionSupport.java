@@ -85,6 +85,7 @@ final class OrdersMenuInteractionSupport {
     }
 
     void sendErrorActionbar(Player player, String message) {
+        manager.sounds().error(player);
         player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
     }
 
