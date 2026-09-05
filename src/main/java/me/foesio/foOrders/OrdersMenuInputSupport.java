@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.Inventory;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -169,6 +170,9 @@ final class OrdersMenuInputSupport {
         if (manager.isOrdersMenu(player.getOpenInventory().getTopInventory())) {
             inventoryCloseSuppressor.clear(player);
         }
+        // Nothing could prompt the player, so say so rather than leaving the
+        // button looking dead.
+        interaction.sendErrorActionbar(player, "Could not open the " + targetLabel.toLowerCase(Locale.ROOT) + " input.");
     }
 
     void openAdminItemSearch(Player player) {
