@@ -77,10 +77,20 @@ discord-webhook:
     claiming-orders: false
     admin-cancelling-or-deleting: true
 
-# Materials that cannot be ordered.
+# Block items players cannot obtain in survival: command blocks, bedrock,
+# barriers, light blocks, debug sticks, structure blocks, spawners, spawn eggs
+# and similar. They are hidden from the item picker and refused at order
+# creation.
+block-creative-only-items: true
+
+# Materials to keep orderable despite the setting above, for servers that
+# legitimately sell one of them. Ignored when block-creative-only-items is false.
+creative-only-exceptions: []
+#  - spawner
+
+# Extra materials that cannot be ordered, on top of the creative-only block.
 # Supports names like "barrier" or "minecraft:barrier".
-blacklist-items:
-  - barrier
+blacklist-items: []
 
 # Display names that cannot be ordered (checked independently from material blacklist).
 blacklist-names:

@@ -517,8 +517,65 @@ public final class OrdersMenuManager implements Listener {
         return true;
     }
 
+    /**
+     * Materials a player cannot legitimately obtain in survival.
+     *
+     * <p>Listed by name rather than as {@code Material} constants: the set spans
+     * several Minecraft versions, and a name that does not exist on the running
+     * server is skipped instead of failing to load. Spawn eggs are matched by
+     * suffix rather than listed one by one.
+     */
+    private static final Set<String> CREATIVE_ONLY_MATERIAL_NAMES = Set.of(
+        // Command and world editing
+        "COMMAND_BLOCK", "CHAIN_COMMAND_BLOCK", "REPEATING_COMMAND_BLOCK", "COMMAND_BLOCK_MINECART",
+        "STRUCTURE_BLOCK", "STRUCTURE_VOID", "JIGSAW", "DEBUG_STICK", "KNOWLEDGE_BOOK",
+        "BARRIER", "LIGHT",
+        // Blocks that never drop themselves
+        "BEDROCK", "END_PORTAL_FRAME", "SPAWNER", "TRIAL_SPAWNER", "VAULT",
+        "REINFORCED_DEEPSLATE", "BUDDING_AMETHYST", "PETRIFIED_OAK_SLAB",
+        "SUSPICIOUS_SAND", "SUSPICIOUS_GRAVEL", "FROGSPAWN",
+        // Only ever placed, never held, in survival
+        "FARMLAND", "DIRT_PATH"
+    );
+    private static final String SPAWN_EGG_SUFFIX = "_SPAWN_EGG";
+
+    /** Every creative-only material this server actually has. */
+    private Set<Material> creativeOnlyMaterials() {
+        Set<Material> materials = new HashSet<>();
+        for (String name : CREATIVE_ONLY_MATERIAL_NAMES) {
+            Material material = Material.matchMaterial(name);
+            if (material != null && material.isItem()) {
+                materials.add(material);
+            }
+        }
+        for (Material material : Material.values()) {
+            if (!material.isLegacy() && material.isItem() && material.name().endsWith(SPAWN_EGG_SUFFIX)) {
+                materials.add(material);
+            }
+        }
+        return materials;
+    }
+
     private void reloadOrderBlacklistsFromConfig() {
         Set<Material> parsedMaterials = new HashSet<>();
+
+        if (plugin.getConfig().getBoolean("block-creative-only-items", true)) {
+            parsedMaterials.addAll(creativeOnlyMaterials());
+
+            // An exception list lets a server keep selling something creative
+            // only, spawners being the usual case.
+            for (String configuredMaterial : plugin.getConfig().getStringList("creative-only-exceptions")) {
+                Material material = resolveConfiguredMaterial(configuredMaterial);
+                if (material == null) {
+                    if (configuredMaterial != null && !configuredMaterial.isBlank()) {
+                        warn("Ignoring invalid creative-only-exceptions entry: '" + configuredMaterial + "'.");
+                    }
+                    continue;
+                }
+                parsedMaterials.remove(material);
+            }
+        }
+
         for (String configuredMaterial : plugin.getConfig().getStringList("blacklist-items")) {
             Material material = resolveConfiguredMaterial(configuredMaterial);
             if (material == null) {

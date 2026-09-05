@@ -170,6 +170,7 @@ public final class FoOrders extends JavaPlugin {
         changed |= setDefaultIfMissing(config, "order-tax.percentage", 0);
         changed |= setDefaultIfMissing(config, "file-logging", false);
         changed |= setDefaultIfMissing(config, "main-orders-per-page", 0);
+        changed |= setDefaultIfMissing(config, "block-creative-only-items", true);
         changed |= setDefaultIfMissing(config, "sounds.enabled", true);
         changed |= setDefaultIfMissing(config, NativeDialogConfigDefaults.ENABLED_PATH, true);
         changed |= setDefaultIfMissing(config, "native-dialogs.item-selection", true);
