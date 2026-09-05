@@ -85,3 +85,34 @@ blacklist-items:
 # Display names that cannot be ordered (checked independently from material blacklist).
 blacklist-names:
   - test_blacklisted_name
+
+# How many orders one page of the /order menu shows.
+# 0 uses every configured order slot (21 by default), so the page arrows only
+# appear once there are more orders than fit. Set a lower number to page sooner.
+main-orders-per-page: 0
+
+# Sounds played for menu actions. Set enabled to false to silence all of them,
+# or blank out a single sound to silence just that one.
+# Each entry accepts a plain sound name, or a section with sound/volume/pitch.
+sounds:
+  enabled: true
+  click:
+    sound: ui.button.click
+    volume: 0.6
+    pitch: 1.0
+  page-turn:
+    sound: item.book.page_turn
+    volume: 0.7
+    pitch: 1.0
+  open:
+    sound: block.chest.open
+    volume: 0.5
+    pitch: 1.2
+  success:
+    sound: entity.experience_orb.pickup
+    volume: 0.7
+    pitch: 1.2
+  error:
+    sound: block.note_block.bass
+    volume: 0.6
+    pitch: 0.8

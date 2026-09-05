@@ -172,6 +172,7 @@ final class OrdersMenuDeliverySupport {
         int dropPageSlot = guiItemSlot("claim-order.drop-page", CLAIM_DROP_PAGE_SLOT, inventorySize);
 
         if (rawSlot == backSlot && viewState.claimPage > 1) {
+            manager.sounds().pageTurn(player);
             viewState.claimPage--;
             openClaimOrderMenu(player, false);
             return;
@@ -180,6 +181,7 @@ final class OrdersMenuDeliverySupport {
         if (rawSlot == nextSlot) {
             int pageCount = calculateClaimSessionPageCount(claimSessionStacks);
             if (viewState.claimPage < pageCount) {
+                manager.sounds().pageTurn(player);
                 viewState.claimPage++;
                 openClaimOrderMenu(player, false);
             }
@@ -416,6 +418,7 @@ final class OrdersMenuDeliverySupport {
                     + " and earned $" + formatCompactAmount(payout) + "."
             );
             sendOrderDeliveredWebhook(player, ownerName, liveOrder, acceptedAmount, payout);
+            manager.sounds().success(player);
             manager.messages().send(player, "orders.delivered", PluginMessages.placeholders("payout", formatCompactAmount(payout)));
             Player orderOwner = Bukkit.getPlayer(activePending.ownerId());
             if (orderOwner != null && orderOwner.isOnline()) {
