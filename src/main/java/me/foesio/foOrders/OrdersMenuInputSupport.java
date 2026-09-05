@@ -107,6 +107,9 @@ final class OrdersMenuInputSupport {
 
     void onPlayerJoin(PlayerJoinEvent event) {
         UUID playerId = event.getPlayer().getUniqueId();
+        // Remember the name while it is free, so rendering an order they own
+        // never has to fall back to a blocking profile lookup.
+        manager.itemSupport.cachePlayerName(playerId, event.getPlayer().getName());
         playerDataStore.getOrCreate(playerId);
         historyDataStore.getOrderHistory(playerId);
     }

@@ -89,7 +89,9 @@ public final class OrdersMenuManager implements Listener {
     static final int MIN_PLAYER_ORDERS = 1;
     static final int MAX_PLAYER_ORDERS_CAP = 26;
     static final long DEFAULT_ORDER_MENU_REFRESH_COOLDOWN_MILLIS = 50L;
-    static final long MAIN_OPTION_REFRESH_DEBOUNCE_TICKS = 4L;
+    // Long enough to coalesce a burst of sort or filter clicks, short enough
+    // that a single click still feels immediate.
+    static final long MAIN_OPTION_REFRESH_DEBOUNCE_TICKS = 2L;
     static final long ITEM_SELECT_OPTION_REFRESH_DEBOUNCE_TICKS = 4L;
     static final double MIN_ORDER_TAX_PERCENTAGE = 0D;
     static final double MAX_ORDER_TAX_PERCENTAGE = 100D;

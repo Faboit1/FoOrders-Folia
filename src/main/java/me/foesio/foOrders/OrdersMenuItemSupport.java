@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static me.foesio.foOrders.OrdersMenuManager.*;
 
@@ -48,6 +49,7 @@ final class OrdersMenuItemSupport {
             }
         }
     );
+    private final Map<UUID, String> playerNameCache = new ConcurrentHashMap<>();
     private volatile CachedOrderableItems cachedOrderableItems = EMPTY_ORDERABLE_ITEMS;
 
     OrdersMenuItemSupport(OrdersMenuManager manager) {
@@ -642,12 +644,40 @@ final class OrdersMenuItemSupport {
         player.openInventory(menu);
     }
 
+    /**
+     * The display name for an order owner.
+     *
+     * <p>Resolved names are cached for the life of the server. Every menu render
+     * resolves a name for each order owner on screen, and
+     * {@code Bukkit.getOfflinePlayer(uuid).getName()} blocks on a Mojang profile
+     * lookup for any UUID missing from the local usercache - which made sorting
+     * and paging stall. Online players are read directly, and the blocking
+     * lookup now happens at most once per unknown UUID.
+     */
     String resolvePlayerName(UUID playerId) {
-        String playerName = Bukkit.getOfflinePlayer(playerId).getName();
-        if (playerName == null || playerName.isBlank()) {
-            return playerId.toString().substring(0, 8);
+        if (playerId == null) {
+            return "Unknown";
         }
-        return playerName;
+
+        String cached = playerNameCache.get(playerId);
+        if (cached != null) {
+            return cached;
+        }
+
+        Player online = Bukkit.getPlayer(playerId);
+        String resolved = online != null ? online.getName() : Bukkit.getOfflinePlayer(playerId).getName();
+        if (resolved == null || resolved.isBlank()) {
+            resolved = playerId.toString().substring(0, 8);
+        }
+        playerNameCache.put(playerId, resolved);
+        return resolved;
+    }
+
+    /** Records a name that is known without a lookup, such as on join. */
+    void cachePlayerName(UUID playerId, String playerName) {
+        if (playerId != null && playerName != null && !playerName.isBlank()) {
+            playerNameCache.put(playerId, playerName);
+        }
     }
 
     List<CustomItemStore.CustomItemDefinition> getSortedCustomItems() {

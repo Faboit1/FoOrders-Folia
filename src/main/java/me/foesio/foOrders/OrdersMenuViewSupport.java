@@ -763,7 +763,9 @@ final class OrdersMenuViewSupport {
         }
 
         switch (action.type()) {
-            case BACK_TO_ITEMS -> openItemSelectMenu(player, false);
+            // Go back the same way the item button opens it, so leaving the
+            // enchant dialog does not drop the player into the chest menu.
+            case BACK_TO_ITEMS -> manager.interactionSupport.actionSupport.openItemSelection(player);
             case CONTINUE_ORDER -> openNewOrderMenu(player);
             case SET_LEVEL -> updateDialogEnchantLevel(player, viewState, draft, material, action.enchantmentKey(), action.level());
         }

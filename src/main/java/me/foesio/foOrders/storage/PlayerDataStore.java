@@ -25,9 +25,10 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -121,19 +122,33 @@ public final class PlayerDataStore {
         writeBehind.flushSynchronously(new ArrayList<>(cache.keySet()), false);
     }
 
+    /**
+     * Every live order, newest cache state winning over the loaded snapshot.
+     *
+     * <p>Called for each menu render - every sort, filter and page click - so it
+     * copies only the order entries it returns. Copying each cached
+     * {@link PlayerData} wholesale first, as this used to, deep copied all of a
+     * player's data just to read their orders and then copied every order again.
+     */
     public List<PlayerOrderRecord> getAllOrdersSnapshot() {
-        Map<UUID, PlayerData> allData = new HashMap<>();
-        for (Map.Entry<UUID, PlayerData> entry : allPlayerDataSnapshot.entrySet()) {
-            allData.put(entry.getKey(), entry.getValue());
-        }
+        List<PlayerOrderRecord> orders = new ArrayList<>();
+        Set<UUID> cachedPlayers = new HashSet<>();
+
         for (Map.Entry<UUID, PlayerData> entry : cache.entrySet()) {
-            synchronized (playerLock(entry.getKey())) {
-                allData.put(entry.getKey(), entry.getValue().copy());
+            UUID playerId = entry.getKey();
+            cachedPlayers.add(playerId);
+            synchronized (playerLock(playerId)) {
+                for (OrderEntry order : entry.getValue().getOrders()) {
+                    orders.add(new PlayerOrderRecord(playerId, order.copy()));
+                }
             }
         }
 
-        List<PlayerOrderRecord> orders = new ArrayList<>();
-        for (Map.Entry<UUID, PlayerData> entry : allData.entrySet()) {
+        // Snapshot values are already defensive copies, so they need no lock.
+        for (Map.Entry<UUID, PlayerData> entry : allPlayerDataSnapshot.entrySet()) {
+            if (cachedPlayers.contains(entry.getKey())) {
+                continue;
+            }
             for (OrderEntry order : entry.getValue().getOrders()) {
                 orders.add(new PlayerOrderRecord(entry.getKey(), order.copy()));
             }
