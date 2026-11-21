@@ -183,6 +183,43 @@ public final class PlayerDataStore {
         return orders;
     }
 
+    /**
+     * Like {@link #getAllOrdersSnapshot()} but only copies the orders the
+     * filter accepts. Copying an order re-sanitizes it (material lookups with
+     * regexes), which is far too costly to do for every open order on every
+     * call when the caller - e.g. the sell axe selling a huge chest, one stack
+     * at a time - only wants the handful matching one item. The filter runs on
+     * the live (not copied) entry and must be read-only and quick.
+     */
+    public List<PlayerOrderRecord> getOrdersSnapshot(java.util.function.Predicate<OrderEntry> filter) {
+        List<PlayerOrderRecord> orders = new ArrayList<>();
+        Set<UUID> cachedPlayers = new HashSet<>();
+
+        for (Map.Entry<UUID, PlayerData> entry : cache.entrySet()) {
+            UUID playerId = entry.getKey();
+            cachedPlayers.add(playerId);
+            synchronized (playerLock(playerId)) {
+                for (OrderEntry order : entry.getValue().getOrders()) {
+                    if (filter.test(order)) {
+                        orders.add(new PlayerOrderRecord(playerId, order.copy()));
+                    }
+                }
+            }
+        }
+
+        for (Map.Entry<UUID, PlayerData> entry : allPlayerDataSnapshot.entrySet()) {
+            if (cachedPlayers.contains(entry.getKey())) {
+                continue;
+            }
+            for (OrderEntry order : entry.getValue().getOrders()) {
+                if (filter.test(order)) {
+                    orders.add(new PlayerOrderRecord(entry.getKey(), order.copy()));
+                }
+            }
+        }
+        return orders;
+    }
+
     private void markDirty(UUID playerId, boolean urgent) {
         ordersRevision.incrementAndGet();
         PlayerData snapshot = null;

@@ -235,22 +235,20 @@ final class OrderFillService implements FoOrdersOrderFillApi {
         }
 
         UUID sellerId = seller.getUniqueId();
-        for (PlayerDataStore.PlayerOrderRecord record : manager.playerDataStore.getAllOrdersSnapshot()) {
+        // Filter before copying: copying every open order for every item stack
+        // stalled the region for 20s when a sell axe sold a huge chest.
+        List<PlayerDataStore.PlayerOrderRecord> open = manager.playerDataStore.getOrdersSnapshot(live ->
+            !live.isCancelled()
+                && live.getPricePerItem() >= minPricePerItem
+                && live.getAmountOrdered() - live.getAmountDelivered() > 0
+                && manager.itemSupport.matchesOrderedItem(sample, live));
+        for (PlayerDataStore.PlayerOrderRecord record : open) {
             PlayerDataStore.OrderEntry order = record.getOrder();
-            if (order.isCancelled()) {
-                continue;
-            }
             if (!includeOwnOrders && sellerId.equals(record.getPlayerId())) {
-                continue;
-            }
-            if (order.getPricePerItem() < minPricePerItem) {
                 continue;
             }
             int stillNeeded = Math.max(0, order.getAmountOrdered() - order.getAmountDelivered());
             if (stillNeeded <= 0) {
-                continue;
-            }
-            if (!manager.itemSupport.matchesOrderedItem(sample, order)) {
                 continue;
             }
             candidates.add(new Candidate(record.getPlayerId(), order, stillNeeded));
